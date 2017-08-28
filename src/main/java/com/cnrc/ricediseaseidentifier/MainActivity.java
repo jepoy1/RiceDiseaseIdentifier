@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
         this.imageView = (ImageView) findViewById(R.id.imgView);
     }
     Intent cameraIntent;
+    Uri pictureUri;
 
 
     // Used to load the 'native-lib' library on application startup.
@@ -90,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         //Combine the pictureDirectory and getPictureName in order to create a correct path to your Storage directory.
         File imageFile = new File(pictureDirectory, pictureName);
         //URI (Unified Resouce Idenfifier):A String of characters used to identify a resource/filePath.
-        Uri pictureUri = Uri.fromFile(imageFile);
+        pictureUri = Uri.fromFile(imageFile);
         //Now save the extra output(Picture from cam, that is) into the file object we created(which is a filepath,technically).
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, pictureUri);
     }
@@ -110,10 +111,30 @@ public class MainActivity extends AppCompatActivity {
         if(resultCode == RESULT_OK){
             //Leave it for later:
             if (requestCode == CAMERA_REQUEST) {
-                //set thumbnail for the layout
+                setThumbnailCamPhoto();
             }
         }
     }
+
+    private void setThumbnailCamPhoto(){
+        //get the address of the photo:
+        Uri thumbnailUri = this.pictureUri;
+        //declare a stream to read the image data from Local Directory:
+        InputStream inputStream;
+        //get an inputStream based on the imageURI:
+        try {
+            inputStream = getContentResolver().openInputStream(pictureUri);
+            // get a bitmap from the stream.
+            Bitmap image = BitmapFactory.decodeStream(inputStream);
+            // show the image to the user
+            imageView.setImageBitmap(image);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            // show a message to the user indictating that the image is unavailable.
+            Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
+        }
+    }
+
 
     static{
         if(OpenCVLoader.initDebug()){
