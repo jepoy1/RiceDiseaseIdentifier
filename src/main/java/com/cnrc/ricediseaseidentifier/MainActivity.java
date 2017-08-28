@@ -45,6 +45,13 @@ public class MainActivity extends AppCompatActivity {
     private void setImageView(){
         this.imageView = (ImageView) findViewById(R.id.imgView);
     }
+
+    private TextView txtView_ypercent;
+    private void setTxtView_ypercent(){ this.txtView_ypercent = (TextView)findViewById(R.id.txtView_ypercent);}
+
+    private TextView txtView_gpercent;
+    private void setTxtView_gpercent(){ this.txtView_gpercent = (TextView)findViewById(R.id.txtView_gpercent);}
+
     Intent cameraIntent;
     Uri pictureUri;
     private String mImgPath;
@@ -52,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
 
     //fields for my openCV:
     Bitmap tempBmp;
+
+
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
@@ -65,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
         //bind xml layout widgets:
         setBtn_openCam();
         setImageView();
+        setTxtView_ypercent();
+        setTxtView_gpercent();
 
         //btnOnclick:
         btn_openCamOnClick();
@@ -141,26 +152,23 @@ public class MainActivity extends AppCompatActivity {
                         //crop image:
                         Mat cropped = new Mat();
                         cropped = crop_image(x);
+
+                        Mat bFilter = new Mat();
+                        Mat lines = new Mat();
+                        Mat circles = new Mat();
+
+                        double pYellow = percent_yellow(cropped);
+                        //double pGreen = percent_green(pYellow);
+                        //bFilter = brownFilter(x);
+                        //lines = getLines(bFilter, 1.0, 0.5, 2);
+                        //circles = getCircles(x);
+
+                        //Outputs:
+                        txtView_ypercent.setText(" " +pYellow);
                     }
 
                     /*
-                    Mat cropped = new Mat();
-                    cropped = crop_image(x);
 
-
-                    Mat bFilter = new Mat();
-                    Mat lines = new Mat();
-                    Mat circles = new Mat();
-
-                    Bitmap bms = Bitmap.createBitmap(x.cols(), x.rows(), Bitmap.Config.ARGB_8888);
-                    Utils.matToBitmap(x, bms);
-                    imageView.setImageBitmap(bms);
-
-                    double pYellow = percent_yellow(cropped);
-                    double pGreen = percent_green(pYellow);
-                    bFilter = brownFilter(x);
-                    lines = getLines(bFilter, 1.0, 0.5, 2);
-                    circles = getCircles(x);
 
 
                     System.out.println("% Y = " + pYellow);
