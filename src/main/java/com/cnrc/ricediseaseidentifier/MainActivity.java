@@ -35,6 +35,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
+    private final String TAG= "MainActivity";
     private static final int CAMERA_REQUEST = 1;
     private Button btn_openCam;
     private void setBtn_openCam(){
@@ -47,8 +48,6 @@ public class MainActivity extends AppCompatActivity {
     Intent cameraIntent;
     Uri pictureUri;
     private String mImgPath;
-    private TextView txt_mImagePath;
-    private TextView txt_pictureUri;
 
 
     // Used to load the 'native-lib' library on application startup.
@@ -104,9 +103,9 @@ public class MainActivity extends AppCompatActivity {
         //Combine the pictureDirectory and getPictureName in order to create a correct path to your Storage directory.
         File imageFile = new File(pictureDirectory, pictureName);
         //URI (Unified Resouce Idenfifier):A String of characters used to identify a resource/filePath.
-        pictureUri = Uri.fromFile(imageFile);
+        this.pictureUri = Uri.fromFile(imageFile);
         //Now save the extra output(Picture from cam, that is) into the file object we created(which is a filepath,technically).
-        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, pictureUri);
+        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, this.pictureUri);
     }
 
     private String getPictureName(){
@@ -117,18 +116,22 @@ public class MainActivity extends AppCompatActivity {
     //static call to check if openCV is Loaded.
 
 
+
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                 {
+                    //test:
+                    Log.i(TAG, mImgPath + " on LoaderCallBackInterface.SUCCESS");
+
+                    isImgPathNull(mImgPath);
                     /*
-                    //pictureUri + mimagePath
-                    String filePath = pictureUri + mImgPath;
-                    Mat x = Imgcodecs.imread(filePath);
+                    Mat x = Imgcodecs.imread(mImgPath);
                     Mat cropped = new Mat();
                     cropped = crop_image(x);
+                    //Log.i(TAG, "mImage has been cropped,");
 
                     Mat bFilter = new Mat();
                     Mat lines = new Mat();
@@ -167,7 +170,10 @@ public class MainActivity extends AppCompatActivity {
         // you may be tempted, to do something here, but it's *async*, and may take some time,
         // so any opencv call here will lead to unresolved native errors.
         if(!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0,this, mLoaderCallback)){
-            Log.i("MainActivity", "OpenCVLoader did not load.");
+            Log.i(TAG, "OpenCVLoader did not load.");
+        }
+        else{
+            Log.i(TAG, "OpenCVLoader Loaded in onResume().");
         }
     }
 
@@ -180,6 +186,8 @@ public class MainActivity extends AppCompatActivity {
             //Leave it for later:
             if (requestCode == CAMERA_REQUEST) {
                 setThumbnailCamPhoto();
+                this.mImgPath = pictureUri.toString();
+                Log.i(TAG, mImgPath + " on activity result.");
             }
         }
     }
@@ -197,34 +205,26 @@ public class MainActivity extends AppCompatActivity {
             // show the image to the user
             imageView.setImageBitmap(image);
 
-
-            //test:
-            txt_mImagePath = (TextView) findViewById(R.id.txt_mImagePath);
-            txt_pictureUri = (TextView) findViewById(R.id.txt_uriPathStr);
-            txt_pictureUri.setText(pictureUri.toString());
-            txt_mImagePath.setText(mImgPath);
-
-            //test:
-            openCVLoaderTest();
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             // show a message to the user indictating that the image is unavailable.
             Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
         }
     }
-    private void openCVLoaderTest(){
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0,this, mLoaderCallback);
-        // you may be tempted, to do something here, but it's *async*, and may take some time,
-        // so any opencv call here will lead to unresolved native errors.
-        if(!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0,this, mLoaderCallback)){
-            Log.i("MainActivity", "OpenCVLoader did not load.");
+
+
+    //helper methods:
+    private void isImgPathNull(String mImgPath){
+        //if mImagePath is null, do nothing. else proceed:
+        if(mImgPath == null){
+            Log.i(TAG, " on test null");
         }
-        else {
-            Log.i("MainActivity", "OpenCVLoader loaded on async mode..");
+        else{
+            if(mImgPath != null){
+                Log.i(TAG, mImgPath + " <- path");
+            }
         }
     }
-
 
     /*
         Image Processing;
@@ -232,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
         2. Feature extraction
         3. Rule-based classification
      */
-    /*
+
     public static Mat crop_image(Mat image_input){
         Mat image_orig = image_input;
         Rect rectCrop = new Rect(image_orig.cols()/2-25, 0, 50, image_orig.rows());
@@ -280,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
         Imgproc.HoughCircles(im, circles, Imgproc.CV_HOUGH_GRADIENT, 1, 30, 100, 100, 30, 500);
         return circles;
     }
-    */
+
 
     static{
         if(OpenCVLoader.initDebug()){
