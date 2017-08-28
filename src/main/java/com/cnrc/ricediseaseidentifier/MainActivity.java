@@ -16,7 +16,17 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
     }
     Intent cameraIntent;
     Uri pictureUri;
+    private String mImgPath;
+    private TextView txt_mImagePath;
+    private TextView txt_pictureUri;
 
 
     // Used to load the 'native-lib' library on application startup.
@@ -104,6 +117,61 @@ public class MainActivity extends AppCompatActivity {
     //static call to check if openCV is Loaded.
 
 
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                {
+                    /*
+                    //pictureUri + mimagePath
+                    String filePath = pictureUri + mImgPath;
+                    Mat x = Imgcodecs.imread(filePath);
+                    Mat cropped = new Mat();
+                    cropped = crop_image(x);
+
+                    Mat bFilter = new Mat();
+                    Mat lines = new Mat();
+                    Mat circles = new Mat();
+
+                    Bitmap bms = Bitmap.createBitmap(x.cols(), x.rows(), Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(x, bms);
+                    imageView.setImageBitmap(bms);
+
+                    double pYellow = percent_yellow(cropped);
+                    double pGreen = percent_green(pYellow);
+                    bFilter = brownFilter(x);
+                    lines = getLines(bFilter, 1.0, 0.5, 2);
+                    circles = getCircles(x);
+
+
+                    System.out.println("% Y = " + pYellow);
+                    System.out.println("% G = " + pGreen);
+                    System.out.println("lines = " + lines.size());
+                    System.out.println("circles = " + circles.size());
+                    */
+                } break;
+                default:
+                {
+                    super.onManagerConnected(status);
+                } break;
+            }
+        }
+    };
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0,this, mLoaderCallback);
+        // you may be tempted, to do something here, but it's *async*, and may take some time,
+        // so any opencv call here will lead to unresolved native errors.
+        if(!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0,this, mLoaderCallback)){
+            Log.i("MainActivity", "OpenCVLoader did not load.");
+        }
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -128,13 +196,91 @@ public class MainActivity extends AppCompatActivity {
             Bitmap image = BitmapFactory.decodeStream(inputStream);
             // show the image to the user
             imageView.setImageBitmap(image);
+
+
+            //test:
+            txt_mImagePath = (TextView) findViewById(R.id.txt_mImagePath);
+            txt_pictureUri = (TextView) findViewById(R.id.txt_uriPathStr);
+            txt_pictureUri.setText(pictureUri.toString());
+            txt_mImagePath.setText(mImgPath);
+
+            //test:
+            openCVLoaderTest();
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             // show a message to the user indictating that the image is unavailable.
             Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
         }
     }
+    private void openCVLoaderTest(){
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0,this, mLoaderCallback);
+        // you may be tempted, to do something here, but it's *async*, and may take some time,
+        // so any opencv call here will lead to unresolved native errors.
+        if(!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0,this, mLoaderCallback)){
+            Log.i("MainActivity", "OpenCVLoader did not load.");
+        }
+        else {
+            Log.i("MainActivity", "OpenCVLoader loaded on async mode..");
+        }
+    }
 
+
+    /*
+        Image Processing;
+        1. Image Segmentation;
+        2. Feature extraction
+        3. Rule-based classification
+     */
+    /*
+    public static Mat crop_image(Mat image_input){
+        Mat image_orig = image_input;
+        Rect rectCrop = new Rect(image_orig.cols()/2-25, 0, 50, image_orig.rows());
+        Mat cropped = image_orig.submat(rectCrop);
+
+        return cropped;
+    }
+
+    public static double percent_yellow(Mat cropped_image) {
+
+        Mat grayscale = cropped_image;
+        Imgproc.cvtColor(grayscale, grayscale, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.threshold(grayscale, grayscale,0,255, Imgproc.THRESH_OTSU);
+        int x = Core.countNonZero(grayscale);
+        double y = (double) x/(grayscale.cols()*grayscale.rows());
+        return y;
+    }
+
+    public static double percent_green(double percent_yellow){
+        return 1.0 - percent_yellow;
+    }
+
+
+    public static Mat brownFilter(Mat image){
+        Mat bFilt = new Mat();
+
+        Imgproc.cvtColor(image, bFilt, Imgproc.COLOR_RGB2HSV);
+        Core.inRange(bFilt,new Scalar(90, 80, 60), new Scalar(255,255,255), bFilt);
+        return bFilt;
+    }
+
+
+    public static Mat getLines(Mat image, double rho, double theta, int threshold) {
+
+        Mat lines = new Mat();
+        Imgproc.HoughLinesP(image, lines, rho, theta, threshold);
+        return lines;
+    }
+
+    public static Mat getCircles(Mat image){
+
+        Mat circles = new Mat();
+        Mat im = image;
+        Imgproc.cvtColor(image, im, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.HoughCircles(im, circles, Imgproc.CV_HOUGH_GRADIENT, 1, 30, 100, 100, 30, 500);
+        return circles;
+    }
+    */
 
     static{
         if(OpenCVLoader.initDebug()){
