@@ -48,9 +48,12 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView txtView_ypercent;
     private void setTxtView_ypercent(){ this.txtView_ypercent = (TextView)findViewById(R.id.txtView_ypercent);}
-
     private TextView txtView_gpercent;
     private void setTxtView_gpercent(){ this.txtView_gpercent = (TextView)findViewById(R.id.txtView_gpercent);}
+    private TextView txtView_lines;
+    private void setTxtView_lines(){ this.txtView_lines = (TextView)findViewById(R.id.txtView_lines);}
+    private TextView txtView_circles;
+    private void setTxtView_circles(){ this.txtView_circles = (TextView)findViewById(R.id.txtView_circles);}
 
     Intent cameraIntent;
     Uri pictureUri;
@@ -76,7 +79,8 @@ public class MainActivity extends AppCompatActivity {
         setImageView();
         setTxtView_ypercent();
         setTxtView_gpercent();
-
+        setTxtView_lines();
+        setTxtView_circles();
         //btnOnclick:
         btn_openCamOnClick();
     }
@@ -159,19 +163,19 @@ public class MainActivity extends AppCompatActivity {
 
                         double pYellow = percent_yellow(cropped);
                         double pGreen = percent_green(pYellow);
-                        //bFilter = brownFilter(x);
-                        //lines = getLines(bFilter, 1.0, 0.5, 2);
-                        //circles = getCircles(x);
+                        bFilter = brownFilter(x);
+                        lines = getLines(bFilter, 1.0, 0.5, 2);
+                        circles = getCircles(x);
 
                         //Outputs:
                         txtView_ypercent.setText(" " +pYellow);
                         txtView_gpercent.setText(" " +pGreen);
+                        txtView_lines.setText(" " +lines.size());
+                        //txtView_circles.setText(" "+circles.size());
+
                     }
 
                     /*
-
-
-
                     System.out.println("% Y = " + pYellow);
                     System.out.println("% G = " + pGreen);
                     System.out.println("lines = " + lines.size());
