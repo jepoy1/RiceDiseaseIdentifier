@@ -158,13 +158,14 @@ public class MainActivity extends AppCompatActivity {
                         Mat circles = new Mat();
 
                         double pYellow = percent_yellow(cropped);
-                        //double pGreen = percent_green(pYellow);
+                        double pGreen = percent_green(pYellow);
                         //bFilter = brownFilter(x);
                         //lines = getLines(bFilter, 1.0, 0.5, 2);
                         //circles = getCircles(x);
 
                         //Outputs:
                         txtView_ypercent.setText(" " +pYellow);
+                        txtView_gpercent.setText(" " +pGreen);
                     }
 
                     /*
