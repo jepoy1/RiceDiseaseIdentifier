@@ -48,8 +48,10 @@ public class MainActivity extends AppCompatActivity {
     Intent cameraIntent;
     Uri pictureUri;
     private String mImgPath;
+    Bitmap imageViewBitmap;
 
-
+    //fields for my openCV:
+    Bitmap tempBmp;
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
@@ -125,13 +127,26 @@ public class MainActivity extends AppCompatActivity {
                 {
                     //test:
                     Log.i(TAG, mImgPath + " on LoaderCallBackInterface.SUCCESS");
+                    if(!isImgPathNull(mImgPath)){
+                        //Instanciate Mat object using imread.
+                        Bitmap bmp = setOpenCVbmp(tempBmp);
+                        Mat x = new Mat();
+                        Utils.bitmapToMat(bmp, x);
+                        if(x.empty()){
+                            Log.i(TAG, "fuck this shit! Details: " + x);
+                        }else{
+                            Log.i(TAG, "Fuck yes! Details: " + x);
+                        }
 
-                    isImgPathNull(mImgPath);
+                        //crop image:
+                        Mat cropped = new Mat();
+                        cropped = crop_image(x);
+                    }
+
                     /*
-                    Mat x = Imgcodecs.imread(mImgPath);
                     Mat cropped = new Mat();
                     cropped = crop_image(x);
-                    //Log.i(TAG, "mImage has been cropped,");
+
 
                     Mat bFilter = new Mat();
                     Mat lines = new Mat();
@@ -202,8 +217,11 @@ public class MainActivity extends AppCompatActivity {
             inputStream = getContentResolver().openInputStream(pictureUri);
             // get a bitmap from the stream.
             Bitmap image = BitmapFactory.decodeStream(inputStream);
+            this.imageViewBitmap = image;
             // show the image to the user
             imageView.setImageBitmap(image);
+            //to be used for openCV:
+            this.tempBmp = setOpenCVbmp(image);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -211,19 +229,38 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
         }
     }
+    private Bitmap setOpenCVbmp(Bitmap image){
+        Bitmap result = null;
 
+        int numPixels = image.getWidth() * image.getHeight();
+        int[] pixels = new int[numPixels];
+
+//        get jpeg pixels, each int is the color value of one pixel
+        image.getPixels(pixels,0,image.getWidth(),0,0,image.getWidth(),image.getHeight());
+
+//        create bitmap in appropriate format
+        result = Bitmap.createBitmap(image.getWidth(),image.getHeight(), Bitmap.Config.ARGB_8888);
+
+//        Set RGB pixels
+        result.setPixels(pixels, 0, result.getWidth(), 0, 0, result.getWidth(), result.getHeight());
+
+        return result;
+    }
 
     //helper methods:
-    private void isImgPathNull(String mImgPath){
+    private boolean isImgPathNull(String mImgPath){
         //if mImagePath is null, do nothing. else proceed:
         if(mImgPath == null){
             Log.i(TAG, " on test null");
+            return true;
         }
         else{
             if(mImgPath != null){
                 Log.i(TAG, mImgPath + " <- path");
+                return false;
             }
         }
+        return mImgPath == null;
     }
 
     /*
@@ -237,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
         Mat image_orig = image_input;
         Rect rectCrop = new Rect(image_orig.cols()/2-25, 0, 50, image_orig.rows());
         Mat cropped = image_orig.submat(rectCrop);
-
+        Log.i("MainActivity", "image cropped");
         return cropped;
     }
 
@@ -248,6 +285,7 @@ public class MainActivity extends AppCompatActivity {
         Imgproc.threshold(grayscale, grayscale,0,255, Imgproc.THRESH_OTSU);
         int x = Core.countNonZero(grayscale);
         double y = (double) x/(grayscale.cols()*grayscale.rows());
+
         return y;
     }
 
@@ -281,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
         return circles;
     }
 
-
+    /*
     static{
         if(OpenCVLoader.initDebug()){
             Log.i("MainActivity", "OpenCV Loaded");
@@ -291,7 +329,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i("MainActivity", "OpenCV failed to load");
         }
     }
-
+    */
 
 
 }
