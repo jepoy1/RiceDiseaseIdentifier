@@ -171,8 +171,7 @@ public class MainActivity extends AppCompatActivity {
                         txtView_ypercent.setText(" " +pYellow);
                         txtView_gpercent.setText(" " +pGreen);
                         txtView_lines.setText(" " +lines.size());
-                        //txtView_circles.setText(" "+circles.size());
-
+                        txtView_circles.setText(" "+circles.size());
                     }
 
                     /*
